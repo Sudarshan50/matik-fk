@@ -1,0 +1,99 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-matik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-matik}
+    ports:
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - matik_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Builds the shared Playwright bot image used by Fire (not a long-running service).
+  bot-image:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: matik-fk-bot:latest
+    network_mode: none
+    command: ["true"]
+    restart: "no"
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    image: matik-fk-admin:latest
+    depends_on:
+      db:
+        condition: service_healthy
+      bot-image:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: postgres://${POSTGRES_USER:-matik}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-matik}
+      PORT: "8787"
+      # Bot containers reach the host-published admin port via host.docker.internal
+      ADMIN_PUBLIC_URL: ${ADMIN_PUBLIC_URL:-http://host.docker.internal:8787}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Set ADMIN_USERNAME in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?Set ADMIN_SESSION_SECRET in .env}
+      ADMIN_BOT_TOKEN: ${ADMIN_BOT_TOKEN:?Set ADMIN_BOT_TOKEN in .env}
+      ADMIN_COOKIE_SECURE: ${ADMIN_COOKIE_SECURE:-false}
+      BOT_IMAGE: matik-fk-bot:latest
+      COMPOSE_PROJECT_DIR: /workspace
+      TOKENS_FILE: /app/tokens.txt
+    ports:
+      - "${PORT:-8787}:8787"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./logs:/app/logs
+      - ./tokens.txt:/app/tokens.txt:ro
+      - ./finding.txt:/app/finding.txt:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    working_dir: /app
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8787/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 8
+      start_period: 20s
+    restart: unless-stopped
+
+  # Optional one-off worker profile (manual docker compose run --profile worker bot ...)
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: matik-fk-bot:latest
+    pull_policy: never
+    profiles: ["worker"]
+    environment:
+      REFRESH_TOKEN: ${REFRESH_TOKEN:-}
+      BOT_LABEL: ${BOT_LABEL:-bot}
+      SEARCH_URL: ${SEARCH_URL:-}
+      MATCH_LOOPS: ${MATCH_LOOPS:-1}
+      KEEP_OPEN: ${KEEP_OPEN:-0}
+      HEADED: ${HEADED:-0}
+      RUN_ID: ${RUN_ID:-}
+      TOKEN_ID: ${TOKEN_ID:-}
+      ADMIN_API_URL: ${ADMIN_API_URL:-http://host.docker.internal:8787}
+      ADMIN_BOT_TOKEN: ${ADMIN_BOT_TOKEN:?Set ADMIN_BOT_TOKEN in .env}
+      MATIKS_DEVICE_ID: ${MATIKS_DEVICE_ID:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./finding.txt:/app/finding.txt:ro
+    shm_size: "1gb"
+
+volumes:
+  matik_pg:

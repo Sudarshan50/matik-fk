@@ -1,0 +1,26 @@
+{
+  "name": "matik-fk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bot": "node src/bot/index.js",
+    "bot:build": "DOCKER_BUILDKIT=1 docker build -t matik-fk-bot:latest -f Dockerfile .",
+    "refresh": "node src/matiks/auth.js",
+    "up": "node scripts/launch.js",
+    "admin": "node server/index.js",
+    "admin:build": "npm --prefix admin install && npm --prefix admin run build",
+    "admin:dev": "node server/index.js",
+    "db:up": "docker compose up -d db",
+    "stack:up": "docker compose up -d --build db bot-image admin",
+    "stack:down": "docker compose down",
+    "stack:logs": "docker compose logs -f admin db",
+    "setup": "npm install && npm run stack:up"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "node-cron": "^4.2.1",
+    "pg": "^8.16.3",
+    "playwright": "1.54.1"
+  }
+}

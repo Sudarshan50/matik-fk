@@ -1,0 +1,29 @@
+# Dependencies & build
+node_modules/
+admin/node_modules/
+admin/dist/
+
+# Secrets & local runtime (NEVER commit)
+.env
+.env.*
+!.env.example
+.credentials.local
+*.pem
+*.key
+tokens.txt
+finding.txt
+
+# Runtime data
+logs/
+data/
+*.log
+*.db
+*.db-shm
+*.db-wal
+
+# Tooling / OS
+.playwright/
+.DS_Store
+.cursor/
+agent-transcripts/
+**/terminals/

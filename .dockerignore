@@ -1,0 +1,15 @@
+node_modules
+admin/node_modules
+admin/dist
+logs
+data
+.git
+*.md
+tokens.txt
+.env
+.credentials.local
+.DS_Store
+agent-transcripts
+.cursor
+**/terminals
+**/*.log

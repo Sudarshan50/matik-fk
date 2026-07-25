@@ -1,0 +1,5 @@
+# One refresh token per line. Lines starting with # are ignored.
+# NEVER commit real tokens. Keep them only in tokens.txt (gitignored).
+#
+# example_refresh_token_aaaaaaaaaaaaaaaa
+# example_refresh_token_bbbbbbbbbbbbbbbb
