@@ -11,12 +11,12 @@ const FILTERS = [
   { id: "disabled", label: "Disabled" },
 ];
 
-function draftFor(token, drafts, defaultTz) {
+function draftFor(token, drafts) {
   return (
     drafts[token.id] || {
       scheduleEnabled: Boolean(token.schedule_enabled),
       scheduleTime: token.schedule_time || "09:00",
-      scheduleTimezone: token.schedule_timezone || defaultTz || "",
+      email: token.email || "",
     }
   );
 }
@@ -36,8 +36,10 @@ export default function TokenScheduleTable({
   scheduleDirty,
   newLabel,
   newToken,
+  newEmail,
   onNewLabel,
   onNewToken,
+  onNewEmail,
   onAdd,
 }) {
   const [query, setQuery] = useState("");
@@ -71,10 +73,10 @@ export default function TokenScheduleTable({
       const hay = [
         token.username,
         token.label,
+        token.email,
         token.refresh_token_hint,
         String(token.id),
         token.schedule_time,
-        token.schedule_timezone,
       ]
         .filter(Boolean)
         .join(" ")
@@ -113,6 +115,15 @@ export default function TokenScheduleTable({
             placeholder="Paste refresh token"
             value={newToken}
             onChange={(e) => onNewToken(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onAdd();
+            }}
+          />
+          <input
+            type="email"
+            placeholder="Notify email (optional)"
+            value={newEmail}
+            onChange={(e) => onNewEmail(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") onAdd();
             }}
@@ -168,16 +179,16 @@ export default function TokenScheduleTable({
             <thead>
               <tr>
                 <th>User</th>
+                <th>Email</th>
                 <th>Status</th>
                 <th>Schedule</th>
                 <th>Time</th>
-                <th>Timezone</th>
                 <th className="col-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((token) => {
-                const draft = draftFor(token, drafts, settings.timezone);
+                const draft = draftFor(token, drafts);
                 const job = jobByToken.get(token.id);
                 const dirty = scheduleDirty(token);
                 const expanded = expandedId === token.id;
@@ -208,6 +219,18 @@ export default function TokenScheduleTable({
                           #{token.id} · {token.refresh_token_hint || "••••"}
                         </span>
                       </button>
+                    </td>
+                    <td className="col-email">
+                      <input
+                        type="email"
+                        className="input-compact"
+                        placeholder="user@iitd.ac.in"
+                        value={draft.email || ""}
+                        disabled={busy}
+                        onChange={(e) =>
+                          onUpdateDraft(token.id, { email: e.target.value })
+                        }
+                      />
                     </td>
                     <td className="col-status">
                       <div className="token-badges">
@@ -248,19 +271,6 @@ export default function TokenScheduleTable({
                         onChange={(e) =>
                           onUpdateDraft(token.id, {
                             scheduleTime: e.target.value,
-                          })
-                        }
-                      />
-                    </td>
-                    <td className="col-tz">
-                      <input
-                        className="input-compact"
-                        value={draft.scheduleTimezone}
-                        disabled={!token.enabled || busy}
-                        placeholder={settings.timezone}
-                        onChange={(e) =>
-                          onUpdateDraft(token.id, {
-                            scheduleTimezone: e.target.value,
                           })
                         }
                       />
@@ -318,6 +328,10 @@ export default function TokenScheduleTable({
                       </div>
                       {expanded ? (
                         <div className="token-row-detail">
+                          <div>
+                            <span className="subtle">Email</span>
+                            <div>{token.email || "—"}</div>
+                          </div>
                           <div>
                             <span className="subtle">Label</span>
                             <div>{token.label || "—"}</div>

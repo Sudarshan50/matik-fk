@@ -78,5 +78,20 @@ export function loadServerConfig(env = process.env) {
         String(env.ADMIN_COOKIE_SECURE || "").toLowerCase() === "true" ||
         String(env.ADMIN_PUBLIC_URL || "").startsWith("https://"),
     },
+    smtp: {
+      enabled:
+        String(env.SMTP_ENABLED || "").toLowerCase() === "1" ||
+        String(env.SMTP_ENABLED || "").toLowerCase() === "true",
+      host: String(env.SMTP_HOST || "").trim(),
+      port: Number(env.SMTP_PORT || 465),
+      secure:
+        env.SMTP_SECURE == null || env.SMTP_SECURE === ""
+          ? Number(env.SMTP_PORT || 465) === 465
+          : String(env.SMTP_SECURE).toLowerCase() === "1" ||
+            String(env.SMTP_SECURE).toLowerCase() === "true",
+      user: String(env.SMTP_USER || "").trim(),
+      pass: String(env.SMTP_PASS || "").trim(),
+      from: String(env.SMTP_FROM || "").trim(),
+    },
   };
 }

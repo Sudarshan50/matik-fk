@@ -790,7 +790,7 @@ textarea:focus {
 
 .token-add {
   display: grid;
-  grid-template-columns: 1fr 1.6fr auto;
+  grid-template-columns: 1fr 1.4fr 1.2fr auto;
   gap: 0.45rem;
   margin-bottom: 0.85rem;
   padding: 0.75rem;

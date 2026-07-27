@@ -9,6 +9,7 @@ import {
 import { eventBus } from "../shared/EventBus.js";
 import { loadServerConfig } from "../config.js";
 import { dockerContainerRunner } from "./DockerContainerRunner.js";
+import { runSuccessNotifier } from "./RunSuccessNotifier.js";
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -31,10 +32,13 @@ async function dbLog(runId, message, extra = {}) {
   }
 }
 
-/** Orchestrates firing containers for enabled tokens (SRP: batch scheduling). */
 export class BatchFireService {
-  constructor({ runner = dockerContainerRunner } = {}) {
+  constructor({
+    runner = dockerContainerRunner,
+    successNotifier = runSuccessNotifier,
+  } = {}) {
     this.runner = runner;
+    this.successNotifier = successNotifier;
   }
 
   async fire({
@@ -174,6 +178,9 @@ export class BatchFireService {
                   level: status === "completed" ? "info" : "error",
                 }
               );
+              if (status === "completed") {
+                await this.successNotifier.notify({ runId, token, kind });
+              }
               eventBus.emit("run", {
                 runId,
                 status,

@@ -11,6 +11,12 @@ function normalizeTime(value, fallback = "09:00") {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
+function normalizeEmail(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  return raw.toLowerCase();
+}
+
 function mapToken(t) {
   if (!t) return null;
   return {
@@ -49,19 +55,21 @@ export class TokenRepository {
   async add({
     label,
     refreshToken,
+    email = null,
     scheduleEnabled = false,
     scheduleTime = "09:00",
     scheduleTimezone = null,
   }) {
     const { rows } = await pool.query(
       `INSERT INTO tokens (
-         label, refresh_token, enabled,
+         label, refresh_token, email, enabled,
          schedule_enabled, schedule_time, schedule_timezone
        )
-       VALUES ($1, $2, TRUE, $3, $4, $5) RETURNING *`,
+       VALUES ($1, $2, $3, TRUE, $4, $5, $6) RETURNING *`,
       [
         label || refreshToken.slice(0, 8),
         refreshToken,
+        normalizeEmail(email),
         Boolean(scheduleEnabled),
         normalizeTime(scheduleTime),
         scheduleTimezone || null,
@@ -77,6 +85,10 @@ export class TokenRepository {
       label: patch.label ?? row.label,
       refresh_token: patch.refreshToken ?? row.refresh_token,
       username: patch.username ?? row.username,
+      email:
+        patch.email !== undefined
+          ? normalizeEmail(patch.email)
+          : row.email || null,
       enabled: patch.enabled == null ? row.enabled : Boolean(patch.enabled),
       schedule_enabled:
         patch.scheduleEnabled == null && patch.schedule_enabled == null
@@ -105,15 +117,16 @@ export class TokenRepository {
     };
     const { rows } = await pool.query(
       `UPDATE tokens SET
-        label=$1, refresh_token=$2, username=$3, enabled=$4,
-        schedule_enabled=$5, schedule_time=$6, schedule_timezone=$7,
-        streak_current=$8, streak_previous=$9, streak_delta=$10, streak_longest=$11,
-        streak_status=$12, streak_checked_at=$13, last_run_at=$14, updated_at=NOW()
-       WHERE id=$15 RETURNING *`,
+        label=$1, refresh_token=$2, username=$3, email=$4, enabled=$5,
+        schedule_enabled=$6, schedule_time=$7, schedule_timezone=$8,
+        streak_current=$9, streak_previous=$10, streak_delta=$11, streak_longest=$12,
+        streak_status=$13, streak_checked_at=$14, last_run_at=$15, updated_at=NOW()
+       WHERE id=$16 RETURNING *`,
       [
         next.label,
         next.refresh_token,
         next.username,
+        next.email,
         next.enabled,
         next.schedule_enabled,
         next.schedule_time,
@@ -209,6 +222,7 @@ export class TokenRepository {
         t.id,
         t.label,
         t.username,
+        t.email,
         t.enabled,
         t.schedule_enabled,
         t.schedule_time,

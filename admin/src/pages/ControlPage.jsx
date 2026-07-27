@@ -28,6 +28,7 @@ export default function ControlPage() {
   const [error, setError] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [newToken, setNewToken] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [drafts, setDrafts] = useState({});
 
   const refresh = useCallback(async () => {
@@ -48,7 +49,7 @@ export default function ControlPage() {
           next[token.id] = {
             scheduleEnabled: Boolean(token.schedule_enabled),
             scheduleTime: token.schedule_time || "09:00",
-            scheduleTimezone: token.schedule_timezone || s.settings.timezone || "",
+            email: token.email || "",
           };
         }
       }
@@ -156,10 +157,12 @@ export default function ControlPage() {
         body: JSON.stringify({
           label: newLabel || undefined,
           refreshToken: newToken.trim(),
+          email: newEmail.trim() || undefined,
         }),
       });
       setNewLabel("");
       setNewToken("");
+      setNewEmail("");
       await refresh();
     } catch (e) {
       setError(e.message);
@@ -212,7 +215,7 @@ export default function ControlPage() {
         body: JSON.stringify({
           scheduleEnabled: draft.scheduleEnabled,
           scheduleTime: draft.scheduleTime,
-          scheduleTimezone: draft.scheduleTimezone || null,
+          email: draft.email || null,
         }),
       });
       if (data.scheduler) setScheduler(data.scheduler);
@@ -232,11 +235,10 @@ export default function ControlPage() {
   function scheduleDirty(token) {
     const draft = drafts[token.id];
     if (!draft) return false;
-    const tz = token.schedule_timezone || settings.timezone || "";
     return (
       draft.scheduleEnabled !== Boolean(token.schedule_enabled) ||
       draft.scheduleTime !== (token.schedule_time || "09:00") ||
-      (draft.scheduleTimezone || "") !== tz
+      (draft.email || "") !== (token.email || "")
     );
   }
 
@@ -294,8 +296,10 @@ export default function ControlPage() {
         scheduleDirty={scheduleDirty}
         newLabel={newLabel}
         newToken={newToken}
+        newEmail={newEmail}
         onNewLabel={setNewLabel}
         onNewToken={setNewToken}
+        onNewEmail={setNewEmail}
         onAdd={addToken}
       />
 

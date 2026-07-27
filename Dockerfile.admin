@@ -24,6 +24,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
+COPY vendor ./vendor
 COPY server ./server
 COPY src ./src
 COPY --from=ui /ui/dist ./admin/dist

@@ -13,12 +13,18 @@ export function settingsRoutes() {
   });
 
   router.put("/settings", async (req, res) => {
-    // Global schedule_* flags are legacy; schedules live on each token.
     const patch = { ...(req.body || {}) };
     delete patch.schedule_enabled;
     delete patch.schedule_time;
-    const settings = await settingsRepository.setMany(patch);
-    // Timezone default can change armed jobs that inherit it.
+    for (const key of Object.keys(patch)) {
+      if (key.startsWith("smtp_")) delete patch[key];
+    }
+
+    if (Object.keys(patch).length) {
+      await settingsRepository.setMany(patch);
+    }
+
+    const settings = await settingsRepository.getAll();
     const scheduler = await schedulerService.reschedule();
     res.json({ settings, scheduler });
   });

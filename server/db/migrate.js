@@ -111,12 +111,16 @@ export async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_streak_logs_token_id ON streak_logs(token_id);
   `);
 
-  // Per-token daily schedules (replaces the old global fire-everyone schedule).
   await pool.query(`
     ALTER TABLE tokens
       ADD COLUMN IF NOT EXISTS schedule_enabled BOOLEAN NOT NULL DEFAULT FALSE,
       ADD COLUMN IF NOT EXISTS schedule_time TEXT NOT NULL DEFAULT '09:00',
       ADD COLUMN IF NOT EXISTS schedule_timezone TEXT;
+  `);
+
+  await pool.query(`
+    ALTER TABLE tokens
+      ADD COLUMN IF NOT EXISTS email TEXT;
   `);
 
   for (const [key, value] of Object.entries(DEFAULTS)) {

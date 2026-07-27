@@ -13,8 +13,14 @@ export function tokenRoutes() {
   });
 
   router.post("/tokens", async (req, res) => {
-    const { label, refreshToken, scheduleEnabled, scheduleTime, scheduleTimezone } =
-      req.body || {};
+    const {
+      label,
+      refreshToken,
+      email,
+      scheduleEnabled,
+      scheduleTime,
+      scheduleTimezone,
+    } = req.body || {};
     if (!refreshToken) {
       return res.status(400).json({ error: "refreshToken required" });
     }
@@ -22,6 +28,7 @@ export function tokenRoutes() {
       const token = await tokenRepository.add({
         label,
         refreshToken,
+        email,
         scheduleEnabled,
         scheduleTime,
         scheduleTimezone,
