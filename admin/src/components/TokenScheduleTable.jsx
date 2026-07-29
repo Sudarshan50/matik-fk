@@ -30,6 +30,7 @@ export default function TokenScheduleTable({
   busy,
   onUpdateDraft,
   onSaveSchedule,
+  onSaveEdit,
   onFire,
   onToggle,
   onRemove,
@@ -45,7 +46,38 @@ export default function TokenScheduleTable({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState({
+    label: "",
+    refreshToken: "",
+    email: "",
+  });
   const [showAdd, setShowAdd] = useState(false);
+
+  function startEdit(token) {
+    setEditingId(token.id);
+    setExpandedId(token.id);
+    setEditDraft({
+      label: token.label || "",
+      refreshToken: "",
+      email: token.email || "",
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditDraft({ label: "", refreshToken: "", email: "" });
+  }
+
+  async function submitEdit(token) {
+    if (!onSaveEdit) return;
+    try {
+      await onSaveEdit(token, editDraft);
+      cancelEdit();
+    } catch {
+      /* parent sets error banner */
+    }
+  }
 
   const counts = useMemo(() => {
     const enabled = tokens.filter((t) => t.enabled).length;
@@ -192,6 +224,7 @@ export default function TokenScheduleTable({
                 const job = jobByToken.get(token.id);
                 const dirty = scheduleDirty(token);
                 const expanded = expandedId === token.id;
+                const editing = editingId === token.id;
                 const name = token.username || token.label || `token-${token.id}`;
                 return (
                   <tr
@@ -297,6 +330,16 @@ export default function TokenScheduleTable({
                         ) : null}
                         <button
                           type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={busy}
+                          onClick={() =>
+                            editing ? cancelEdit() : startEdit(token)
+                          }
+                        >
+                          {editing ? "Cancel edit" : "Edit"}
+                        </button>
+                        <button
+                          type="button"
                           className="btn btn-primary btn-sm"
                           disabled={
                             busy || !token.enabled || activeIds.has(token.id)
@@ -326,7 +369,72 @@ export default function TokenScheduleTable({
                           Remove
                         </button>
                       </div>
-                      {expanded ? (
+                      {editing ? (
+                        <div className="token-edit">
+                          <label className="field">
+                            Label
+                            <input
+                              value={editDraft.label}
+                              disabled={busy}
+                              onChange={(e) =>
+                                setEditDraft((d) => ({
+                                  ...d,
+                                  label: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="field">
+                            Notify email
+                            <input
+                              type="email"
+                              value={editDraft.email}
+                              disabled={busy}
+                              placeholder="user@iitd.ac.in"
+                              onChange={(e) =>
+                                setEditDraft((d) => ({
+                                  ...d,
+                                  email: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="field field-span">
+                            Refresh token
+                            <input
+                              value={editDraft.refreshToken}
+                              disabled={busy}
+                              placeholder={`Leave blank to keep ${
+                                token.refresh_token_hint || "current token"
+                              }`}
+                              onChange={(e) =>
+                                setEditDraft((d) => ({
+                                  ...d,
+                                  refreshToken: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <div className="token-edit-actions">
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              disabled={busy}
+                              onClick={() => submitEdit(token)}
+                            >
+                              Save token
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              disabled={busy}
+                              onClick={cancelEdit}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : expanded ? (
                         <div className="token-row-detail">
                           <div>
                             <span className="subtle">Email</span>

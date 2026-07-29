@@ -180,6 +180,13 @@ export class BatchFireService {
               );
               if (status === "completed") {
                 await this.successNotifier.notify({ runId, token, kind });
+              } else if (status === "failed") {
+                await this.successNotifier.notifyFailure({
+                  runId,
+                  token,
+                  kind,
+                  logExcerpt: logs || error || "",
+                });
               }
               eventBus.emit("run", {
                 runId,

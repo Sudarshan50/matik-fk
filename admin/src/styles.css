@@ -990,6 +990,33 @@ textarea:focus {
   word-break: break-all;
 }
 
+.token-edit {
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 0.65rem;
+  padding: 0.65rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px dashed var(--line);
+}
+
+.token-edit .field {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.token-edit .field-span {
+  grid-column: 1 / -1;
+}
+
+.token-edit-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
 .badge-ok {
   background: var(--ok-soft);
   color: var(--ok);
@@ -1264,7 +1291,8 @@ textarea:focus {
   .stat-strip,
   .form-grid,
   .form-grid-compact,
-  .token-add {
+  .token-add,
+  .token-edit {
     grid-template-columns: 1fr;
   }
 

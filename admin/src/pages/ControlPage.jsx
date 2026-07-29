@@ -232,6 +232,37 @@ export default function ControlPage() {
     }
   }
 
+  async function saveTokenEdit(token, { label, refreshToken, email }) {
+    setBusy(true);
+    setError("");
+    try {
+      const body = {
+        label: String(label || "").trim() || token.label,
+        email: String(email || "").trim() || null,
+      };
+      const nextToken = String(refreshToken || "").trim();
+      if (nextToken) body.refreshToken = nextToken;
+      const data = await api(`/api/tokens/${token.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      if (data.scheduler) setScheduler(data.scheduler);
+      setDrafts((prev) => ({
+        ...prev,
+        [token.id]: {
+          ...(prev[token.id] || {}),
+          email: body.email || "",
+        },
+      }));
+      await refresh();
+    } catch (e) {
+      setError(e.message);
+      throw e;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function scheduleDirty(token) {
     const draft = drafts[token.id];
     if (!draft) return false;
@@ -290,6 +321,7 @@ export default function ControlPage() {
         busy={busy}
         onUpdateDraft={updateDraft}
         onSaveSchedule={saveTokenSchedule}
+        onSaveEdit={saveTokenEdit}
         onFire={fireNow}
         onToggle={toggleToken}
         onRemove={removeToken}

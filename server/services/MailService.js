@@ -54,12 +54,11 @@ export class MailService {
     return { transporter, cfg, from: this.resolveFromAddress(cfg) };
   }
 
-  async sendRunSuccess({ to, run, token, kind = "manual" } = {}) {
+  #canSend(to, token) {
     const email = String(to || token?.email || "").trim();
     if (!looksLikeEmail(email)) {
       return { skipped: true, reason: "no_email" };
     }
-
     const cfg = this.getSmtpConfig();
     if (!cfg.enabled) {
       return { skipped: true, reason: "smtp_disabled" };
@@ -67,23 +66,48 @@ export class MailService {
     if (!cfg.host || !cfg.user || !cfg.pass) {
       return { skipped: true, reason: "smtp_not_configured" };
     }
+    return { email };
+  }
 
-    const { subject, text, html } = this.builder.build({ run, token, kind });
+  async #send({ to, token, subject, text, html }) {
+    const gate = this.#canSend(to, token);
+    if (gate.skipped) return gate;
 
     try {
       const { transporter, from } = this.createTransport();
       const info = await transporter.sendMail({
         from: `Matik Control <${from}>`,
-        to: email,
+        to: gate.email,
         subject,
         text,
         html,
       });
-      return { ok: true, messageId: info.messageId, to: email };
+      return { ok: true, messageId: info.messageId, to: gate.email };
     } catch (err) {
       console.error("[mail] send failed:", err.message);
-      return { ok: false, error: err.message, to: email };
+      return { ok: false, error: err.message, to: gate.email };
     }
+  }
+
+  async sendRunSuccess({ to, run, token, kind = "manual" } = {}) {
+    const { subject, text, html } = this.builder.build({ run, token, kind });
+    return this.#send({ to, token, subject, text, html });
+  }
+
+  async sendRunFailure({
+    to,
+    run,
+    token,
+    kind = "manual",
+    logExcerpt = "",
+  } = {}) {
+    const { subject, text, html } = this.builder.buildFailure({
+      run,
+      token,
+      kind,
+      logExcerpt,
+    });
+    return this.#send({ to, token, subject, text, html });
   }
 }
 
