@@ -56,6 +56,13 @@ export class BatchFireService {
     const searchUrl = settings.search_url || "";
     const maxRetries = Number(settings.max_retries ?? 2);
     const failsafeMs = Number(settings.failsafe_timeout_min ?? 8) * 60 * 1000;
+    let answerCapMin = Number(settings.answer_cap_min ?? 20);
+    let answerCapMax = Number(settings.answer_cap_max ?? 40);
+    if (!Number.isFinite(answerCapMin) || answerCapMin < 1) answerCapMin = 20;
+    if (!Number.isFinite(answerCapMax) || answerCapMax < 1) answerCapMax = 40;
+    if (answerCapMin > answerCapMax) {
+      [answerCapMin, answerCapMax] = [answerCapMax, answerCapMin];
+    }
 
     let tokens = (await tokenRepository.list({ includeSecret: true })).filter(
       (t) => t.enabled
@@ -144,6 +151,8 @@ export class BatchFireService {
                 ADMIN_BOT_TOKEN: config.auth.botToken,
                 MATIKS_DEVICE_ID: `bot_${token.id}_${runId.slice(0, 6)}`,
                 BOT_MAX_RETRIES: String(maxRetries),
+                BOT_MAX_ANSWERS_MIN: String(answerCapMin),
+                BOT_MAX_ANSWERS_MAX: String(answerCapMax),
               },
             })
             .then(async ({ code, logs, error, attempt, logDir, retries }) => {

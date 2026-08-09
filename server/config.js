@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { loadEnvFile } from "./loadEnv.js";
 
 function requireNonEmpty(env, key) {
   const value = String(env[key] || "").trim();
@@ -16,6 +17,9 @@ function requireNonEmpty(env, key) {
  * Set ALLOW_INSECURE_DEFAULTS=1 only for throwaway local experiments.
  */
 export function loadServerConfig(env = process.env) {
+  // ESM imports can load this before index.js calls loadEnvFile().
+  if (env === process.env) loadEnvFile();
+
   const isProd = String(env.NODE_ENV || "").toLowerCase() === "production";
   const allowInsecure =
     String(env.ALLOW_INSECURE_DEFAULTS || "").toLowerCase() === "1";

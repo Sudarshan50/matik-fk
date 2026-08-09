@@ -19,6 +19,14 @@ export class MatiksBot {
       new MatchPlayer({
         matchTimeoutMs: config.matchTimeoutMs,
         keepAliveMs: config.keepAliveMs,
+        maxAnswersMin: config.maxAnswersMin,
+        maxAnswersMax: config.maxAnswersMax,
+        thinkDelayMinMs: config.thinkDelayMinMs,
+        thinkDelayMaxMs: config.thinkDelayMaxMs,
+        keyDelayMinMs: config.keyDelayMinMs,
+        keyDelayMaxMs: config.keyDelayMaxMs,
+        postAnswerDelayMinMs: config.postAnswerDelayMinMs,
+        postAnswerDelayMaxMs: config.postAnswerDelayMaxMs,
       });
   }
 

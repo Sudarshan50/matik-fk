@@ -424,6 +424,36 @@ export default function ControlPage() {
                 }
               />
             </label>
+            <label className="field">
+              Answer cap min
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={settings.answer_cap_min ?? 20}
+                onChange={(e) =>
+                  setSettings((s) => ({
+                    ...s,
+                    answer_cap_min: e.target.value,
+                  }))
+                }
+              />
+            </label>
+            <label className="field">
+              Answer cap max
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={settings.answer_cap_max ?? 40}
+                onChange={(e) =>
+                  setSettings((s) => ({
+                    ...s,
+                    answer_cap_max: e.target.value,
+                  }))
+                }
+              />
+            </label>
             <label className="field field-span">
               Search URL
               <input
@@ -434,6 +464,10 @@ export default function ControlPage() {
               />
             </label>
           </div>
+          <p className="card-note">
+            Each match picks a random answer count between cap min and max, then
+            idles until the game ends.
+          </p>
           <div className="card-actions">
             <button
               type="button"
@@ -447,6 +481,8 @@ export default function ControlPage() {
                   match_loops: settings.match_loops,
                   max_retries: settings.max_retries,
                   failsafe_timeout_min: settings.failsafe_timeout_min,
+                  answer_cap_min: settings.answer_cap_min ?? 20,
+                  answer_cap_max: settings.answer_cap_max ?? 40,
                   search_url: settings.search_url,
                 })
               }

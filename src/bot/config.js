@@ -22,6 +22,14 @@ export function loadBotConfig(env = process.env) {
     matchTimeoutMs: Number(env.MATCH_TIMEOUT_MS || 90000),
     keepAliveMs: Number(env.KEEPALIVE_MS || 180),
     matchRetries: Number(env.BOT_MATCH_RETRIES || 2),
+    maxAnswersMin: Number(env.BOT_MAX_ANSWERS_MIN || 20),
+    maxAnswersMax: Number(env.BOT_MAX_ANSWERS_MAX || 40),
+    thinkDelayMinMs: Number(env.BOT_THINK_DELAY_MIN_MS || 450),
+    thinkDelayMaxMs: Number(env.BOT_THINK_DELAY_MAX_MS || 1400),
+    keyDelayMinMs: Number(env.BOT_KEY_DELAY_MIN_MS || 70),
+    keyDelayMaxMs: Number(env.BOT_KEY_DELAY_MAX_MS || 180),
+    postAnswerDelayMinMs: Number(env.BOT_POST_ANSWER_DELAY_MIN_MS || 900),
+    postAnswerDelayMaxMs: Number(env.BOT_POST_ANSWER_DELAY_MAX_MS || 2400),
   };
 }
 

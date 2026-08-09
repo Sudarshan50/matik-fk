@@ -11,6 +11,8 @@ const DEFAULTS = {
   stagger_seconds: "15",
   max_retries: "2",
   failsafe_timeout_min: "8",
+  answer_cap_min: "20",
+  answer_cap_max: "40",
 };
 
 export async function initDb() {
